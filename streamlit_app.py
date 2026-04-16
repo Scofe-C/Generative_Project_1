@@ -333,8 +333,13 @@ def load_m2_model(checkpoint_path: str):
 
     from transformers import CLIPModel, CLIPProcessor
 
+    import io
+
     device = get_device()
-    ckpt = torch.load(checkpoint_path, map_location=device, weights_only=False)
+    # Read into memory first to avoid Windows file-locking issues
+    with open(checkpoint_path, "rb") as f:
+        buf = io.BytesIO(f.read())
+    ckpt = torch.load(buf, map_location=device, weights_only=False)
 
     # Infer architecture from checkpoint weights so any checkpoint works,
     # regardless of which CLIP/GPT-2 variant was used to train it.

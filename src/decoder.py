@@ -304,8 +304,13 @@ def run_generation(
             "Run train.py first: python train.py --run_id run_001"
         )
 
+    import io
+
     logger.info("Loading checkpoint from %s", ckpt_path)
-    ckpt = torch.load(ckpt_path, map_location=device, weights_only=True)
+    # Read into memory first to avoid Windows file-locking issues
+    with open(ckpt_path, "rb") as f:
+        buf = io.BytesIO(f.read())
+    ckpt = torch.load(buf, map_location=device, weights_only=True)
 
     clip_dim   = image_embeddings.shape[-1]
     gpt2_name  = config["models"]["gpt2"]

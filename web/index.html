@@ -235,15 +235,6 @@
   .failure-caption-text { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; line-height: 1.5; color: var(--on-surface); }
   .failure-reason { font-size: 0.78rem; color: var(--tertiary); font-style: italic; line-height: 1.45; margin-top: 0.25rem; padding-top: 0.75rem; box-shadow: 0 -1px 0 0 var(--surface-container); }
 
-  /* Architecture */
-  .arch-section { padding: 6rem 0; }
-  .arch-section h2 { margin-bottom: 3rem; }
-  .arch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
-  .arch-card { background: var(--warm-panel); padding: 2rem; border-radius: 0.25rem; position: relative; overflow: hidden; }
-  .arch-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--primary); }
-  .arch-card code { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 0.95rem; color: var(--primary); display: block; margin-bottom: 0.6rem; padding-left: 0.25rem; }
-  .arch-card p { font-size: 0.85rem; color: var(--tertiary); line-height: 1.55; padding-left: 0.25rem; }
-
   /* Model architecture diagram */
   .arch-diagram-section { padding: 4rem 0 6rem; background: var(--surface-container-lowest); }
   .arch-diagram-section h2 { margin-bottom: 1rem; }
@@ -317,7 +308,6 @@
   @media (max-width: 768px) {
     .pipeline-steps { flex-direction: column; align-items: center; gap: 1rem; }
     .pipeline-arrow { display: none; }
-    .arch-grid { grid-template-columns: 1fr; }
     .team-grid { grid-template-columns: repeat(2, 1fr); }
     .header-nav { display: none; }
     .footer-inner { flex-direction: column; gap: 1rem; text-align: center; }
@@ -355,9 +345,9 @@ const CONFIG = {
 
   // ─── Hero showcase ────────────────────────────────────────────
   hero: {
-    image:   null,   // ← e.g. "images/hero_example.jpg" or a URL
-    caption: "A brown dog is running through the water with a ball in its mouth.",
-    badges:  ["CLIP ViT-B/32", "GPT-2", "LoRA r=8", "Beam k=5"],
+    image:   "images/屏幕截图 2026-04-15 191130.png",
+    caption: "A Brown dog is runing throught water. He is holding a ball in its mouth.",
+    badges:  ["CLIP ViT-L/14", "GPT-2 Medium", "LoRA r=16", "Beam k=5"],
   },
 
   // ─── Demo sidebar ─────────────────────────────────────────────
@@ -367,18 +357,18 @@ const CONFIG = {
     strategies: [
       {
         strategy: "Greedy",
-        caption:  "A tan dog is running through the water with a ball in its mouth.",
-        metrics:  { "BLEU-4": 0.059, "METEOR": 0.303, "ROUGE-L": 0.198, "CLIP Sim": 0.19 },
+        caption:  "A man and a woman are running on the beach near the water.",
+        metrics:  { "BLEU-4": 0.142, "METEOR": 0.303, "ROUGE-L": 0.198, "CLIP Sim": 0.19 },
       },
       {
         strategy: "Beam k=5",
-        caption:  "A brown dog is running through the water with a ball in its mouth.",
-        metrics:  { "BLEU-4": 0.080, "METEOR": 0.314, "ROUGE-L": 0.221, "CLIP Sim": 0.19 },
+        caption:  "A man and a woman are running on the beach. The man is jumping in the air while the woman is chasing him.",
+        metrics:  { "BLEU-4": 0.177, "METEOR": 0.318, "ROUGE-L": 0.213, "CLIP Sim": 0.19 },
       },
       {
         strategy: "Nucleus p=0.9",
-        caption:  "The dog has been running with a ball in his mouth on a beach.",
-        metrics:  { "BLEU-4": 0.029, "METEOR": 0.248, "ROUGE-L": 0.166, "CLIP Sim": 0.18 },
+        caption:  "Two people are chasing seagulls along the shoreline on a sunny day at the beach.",
+        metrics:  { "BLEU-4": 0.068, "METEOR": 0.248, "ROUGE-L": 0.166, "CLIP Sim": 0.18 },
       },
     ],
 
@@ -424,19 +414,10 @@ const CONFIG = {
   // ─── Failure gallery ──────────────────────────────────────────
   // Real failure cases from run_004 and run_007
   failures: [
-    { image: null, generated: "A man and a woman are standing on a sand dune. The man is wearing a white shirt and the woman is wearing black pants. The man is standing on top of the woman while the woman stands on top of the man.", truth: "A man is sandboarding down a large sand dune while a woman watches from behind.", reason: "Sentence-level repetition — beam search finds high-probability loops where the same relationship is paraphrased. Adding repetition_penalty=1.5 or switching to contrastive search eliminates this." },
-    { image: null, generated: "A man in a red shirt is standing on a fire hose and is holding a fire extinguisher.", truth: "Red spray is being ejected by an orange and white plane flying over the hilltops.", reason: "Object hallucination — the model sees 'red' and 'fire' cues but invents a person instead of recognizing the airplane. The CLIP prefix provides color/scene info but not fine-grained object identity." },
-    { image: null, generated: "A little girl is holding a paintbrush while the little boy is painting on the wall. The little girl holds the paintbrush in her hand while the boy holds the brush in his.", truth: "Children sitting at a table painting with watercolors and brushes.", reason: "Paraphrase loops — the decoder restates the same action using slightly different wording, bypassing n-gram blocking. Contrastive search's hidden-state similarity penalty directly addresses this." },
-    { image: null, generated: "For the last three weeks I've been watching people's work as they look on at the sun.", truth: "Two people digging while a blond woman looks for artifacts.", reason: "Semantic flattening under nucleus sampling — stochastic decoding overrides visual grounding entirely, generating fluent but image-disconnected text driven by GPT-2's language prior." },
-  ],
-
-  // ─── Architecture modules ─────────────────────────────────────
-  architecture: [
-    { name: "data_loader",  desc: "Streams Flickr30k via HuggingFace datasets with caption dropout for training data augmentation." },
-    { name: "preprocessor", desc: "Normalizes images to CLIP tensors (224x224) and handles GPT-2 sub-word tokenization with BOS/EOS." },
-    { name: "decoder",      desc: "PrefixProjection MLP mapping CLIP 512-d embeddings to K learned prefix tokens in GPT-2's embedding space." },
-    { name: "train",        desc: "Training loop with LoRA adapters, cosine LR schedule, label smoothing, and per-sample metric logging." },
-    { name: "evaluate",     desc: "Corpus-level BLEU-4, CIDEr, ROUGE-L, METEOR, and CLIP similarity with multi-reference support." },
+    { image: "images/屏幕截图 2026-04-15 191345.png", generated: "A man and a woman are standing on a sand dune. The man is wearing a white shirt and the woman is wearing black pants. The man is standing on top of the woman while the woman stands on top of the man.", truth: "A man is sandboarding down a large sand dune while a woman watches from behind.", reason: "Sentence-level repetition — beam search finds high-probability loops where the same relationship is paraphrased. Adding repetition_penalty=1.5 or switching to contrastive search eliminates this." },
+    { image: "images/屏幕截图 2026-04-15 191234.png", generated: "A man in a red shirt is standing on a fire hose and is holding a fire extinguisher.", truth: "Red spray is being ejected by an orange and white plane flying over the hilltops.", reason: "Object hallucination — the model sees 'red' and 'fire' cues but invents a person instead of recognizing the airplane. The CLIP prefix provides color/scene info but not fine-grained object identity." },
+    { image: "images/438106 9.jpg", generated: "A little girl is holding a paintbrush while the little boy is painting on the wall. The little girl holds the paintbrush in her hand while the boy holds the brush in his.", truth: "Children sitting at a table painting with watercolors and brushes.", reason: "Paraphrase loops — the decoder restates the same action using slightly different wording, bypassing n-gram blocking. Contrastive search's hidden-state similarity penalty directly addresses this." },
+    { image: "images/屏幕截图 2026-04-15 210140.png", generated: "For the last three weeks I've been watching people's work as they look on at the sun.", truth: "Two people digging while a blond woman looks for artifacts.", reason: "Semantic flattening under nucleus sampling — stochastic decoding overrides visual grounding entirely, generating fluent but image-disconnected text driven by GPT-2's language prior." },
   ],
 
   // ─── Decoding algorithm intros ─────────────────────────────
@@ -516,7 +497,7 @@ const CONFIG = {
       <div class="header-logo">CLIP + GPT-2</div>
       <nav class="header-nav">
         <a href="#pipeline" class="active">Research</a>
-        <a href="#architecture">Architecture</a>
+        <a href="#arch-diagram">Architecture</a>
         <a href="#algorithms">Algorithms</a>
         <a href="#demo">Demo</a>
         <a href="#results">Results</a>
@@ -571,7 +552,7 @@ const CONFIG = {
 </section>
 
 <!-- MODEL ARCHITECTURE DIAGRAM -->
-<section class="arch-diagram-section">
+<section id="arch-diagram" class="arch-diagram-section">
   <div class="container">
     <h2 class="t-headline">Model Architecture</h2>
     <p class="arch-subtitle">Our image captioning pipeline bridges vision and language through a learned prefix projection. The CLIP encoder extracts semantic visual features, which are mapped into GPT-2's embedding space as soft prompt tokens.</p>
@@ -789,14 +770,6 @@ const CONFIG = {
   </div>
 </section>
 
-<!-- ARCHITECTURE -->
-<section id="architecture" class="arch-section">
-  <div class="container">
-    <h2 class="t-headline">Architecture</h2>
-    <div class="arch-grid" id="arch-grid"></div>
-  </div>
-</section>
-
 <!-- TEAM -->
 <section id="team" class="team-section">
   <div class="container">
@@ -980,10 +953,6 @@ const CONFIG = {
         <div class="failure-reason">${esc(f.reason)}</div>
       </div>
     </div>`).join('');
-
-  // ── Architecture module cards
-  $('#arch-grid').innerHTML = C.architecture.map(m => `
-    <div class="arch-card"><code>${esc(m.name)}</code><p>${esc(m.desc)}</p></div>`).join('');
 
   // ── Architecture specs
   if (C.archDiagram && C.archDiagram.specs) {
